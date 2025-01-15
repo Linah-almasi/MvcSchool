@@ -15,7 +15,7 @@ public static class SeedData
                 DbContextOptions<MvcSchoolContext>>()))
         {
             // Look for any movies.
-            IList < Lesson > lessons = context.Lesson.ToList();
+            IList<Lesson> lessons = [.. context.Lesson];
             if (context.Lesson.Any())
             {
                 return;   // DB has been seeded
@@ -24,14 +24,14 @@ public static class SeedData
                 new Lesson
                 {
                     Subject = "ENGLISH",
-                    Time = DateTime.Parse("13:00"),
+                    StartTime = DateTime.Parse("13:00"),
                     Location = "Auditorium",
                     Price = 7.99M
                 },
                 new Lesson
                 {
                     Subject = "FRENCH",
-                    Time = DateTime.Parse("11:00"),
+                    StartTime = DateTime.Parse("11:00"),
                     Location = "Theater",
                     Price = 7.99M
                    
@@ -39,14 +39,14 @@ public static class SeedData
                 new Lesson
                 {
                     Subject = "GERMAN",
-                    Time = DateTime.Parse("12:00"),
+                   StartTime = DateTime.Parse("12:00"),
                     Location = "Main hall",
                     Price = 7.99M
                 },
                 new Lesson
                 {
-                    Subject = "Latino",
-                    Time = DateTime.Parse("08:00"),
+                    Subject = "LATINO",
+                    StartTime = DateTime.Parse("08:00"),
                     Location = "Complex center",
                     Price = 7.99M
                 }

@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MvcSchool.Data;
 using MvcSchool.Models;
 
 namespace MvcSchool.Controllers
 {
+
     public class LessonsController : Controller
     {
         private readonly MvcSchoolContext _context;
+        private string? searchString;
+        private string? lessonGenreVM;
 
         public LessonsController(MvcSchoolContext context)
         {
@@ -20,49 +25,41 @@ namespace MvcSchool.Controllers
         }
 
         // GET: Lessons
-        public async Task<IActionResult> Index()
+        // GET: Movies
+        // GET: Movies
+        public async Task<IActionResult> Index(string lessonGenre, string searchString)
         {
-            return View(await _context.Lesson.ToListAsync());
-        }
-
-        // GET: Lessons/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
+            if (_context.Lesson == null)
             {
-                return NotFound();
+                return Problem("Entity set 'MvcSchoolContext.Lesson'  is null.");
             }
 
-            var lesson = await _context.Lesson
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (lesson == null)
+            // Use LINQ to get list of genres.
+            IQueryable<string> genreQuery = from m in _context.Lesson
+                                            orderby m.Genre
+                                            select m.Genre;
+            var lessons = from m in _context.Lesson
+                         select m;
+
+            if (!string.IsNullOrWhiteSpace(searchString))
             {
-                return NotFound();
+               // lessons = lessons.Where(s => !string.IsNullOrEmpty(s.Title) &&
+                                              //s.Title.ToUpper(CultureInfo.CurrentCulture)
+                                                 // .Contains(searchString.ToUpper(CultureInfo.CurrentCulture)));
             }
 
-            return View(lesson);
-        }
-
-        // GET: Lessons/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Lessons/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Subject,Time,Location,Price")] Lesson lesson)
-        {
-            if (ModelState.IsValid)
+            if (!string.IsNullOrEmpty(lessonGenre))
             {
-                _context.Add(lesson);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                lessons = lessons.Where(x => x.Genre == lessonGenre);
             }
-            return View(lesson);
+
+            var lessonGenreVM = new LessonGenreViewModel
+            {
+                Genres = new SelectList(await genreQuery.Distinct().ToListAsync()),
+                Lessons = await lessons.ToListAsync()
+            };
+
+            return View(lessonGenreVM);
         }
 
         // GET: Lessons/Edit/5
@@ -86,7 +83,7 @@ namespace MvcSchool.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Subject,Time,Location,Price")] Lesson lesson)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Subject,StartTime,Location,Price")] Lesson lesson)
         {
             if (id != lesson.Id)
             {
